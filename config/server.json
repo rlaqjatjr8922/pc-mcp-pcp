@@ -1,8 +1,0 @@
-{
-  "host": "127.0.0.1",
-  "port": 8765,
-  "api_keys": {
-    "human": "CHANGE_ME_HUMAN_RANDOM_KEY",
-    "bot": "CHANGE_ME_BOT_RANDOM_KEY"
-  }
-}
