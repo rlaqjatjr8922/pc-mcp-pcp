@@ -1,5 +1,5 @@
 name = "simsimpc-webrtc-signal"
-main = "src/index.js"
+main = "Server/index.js"
 compatibility_date = "2026-09-01"
 
 [[durable_objects.bindings]]
