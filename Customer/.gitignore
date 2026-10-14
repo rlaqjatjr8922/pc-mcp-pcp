@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+*.pyc
+dat/*
+!dat/.gitkeep
+config/server.json

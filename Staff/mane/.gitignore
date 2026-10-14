@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+*.pyc
+config/server.json
+config/tunnel/*.key
+dat/

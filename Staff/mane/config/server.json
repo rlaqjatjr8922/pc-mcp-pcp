@@ -1,0 +1,11 @@
+{
+  "host": "127.0.0.1",
+  "port": 8765,
+  "api_keys": {
+    "human": "CumR77b6S2NXHGtcWUyT_3Fj8yrNKdBKFe_-kbF_iIY",
+    "bot": "BSRrKojdb3CIAUl5q7gYdohnbecAV74uaWNuVsL9fnU"
+  },
+  "signal_url": "https://pc-mcp-pcp.gimbeomseognam5.workers.dev/",
+  "room": "pc-3912ca6b7dfbe696",
+  "shared_key": "6tTR9H0GWiKk-zhUEX1wqEW03JO34NpSh6k0KmWTzMc"
+}
