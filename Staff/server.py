@@ -1,5 +1,6 @@
 """SimSimPC JSON command server. Run: python server.py"""
 import argparse
+import asyncio
 import importlib.util
 import inspect
 import json
@@ -76,7 +77,10 @@ def execute(command, actor):
         return {"success": False, "error": "MISSING_PARAMETER", "missing": missing}
     try:
         bound = tool["signature"].bind(**params)
-        return {"success": True, "result": tool["module"].run(*bound.args, **bound.kwargs)}
+        fn = tool["module"].run
+        if path == "webrtc/ping.py":
+            return {"success": False, "error": "USE_ASYNC_ENDPOINT", "detail": "Use POST /execute; WebRTC connections are async"}
+        return {"success": True, "result": fn(*bound.args, **bound.kwargs)}
     except TypeError as exc:
         return {"success": False, "error": "INVALID_PARAMETER", "detail": str(exc)}
     except Exception as exc:
@@ -112,7 +116,29 @@ async def dispatch(request: Request):
         command = await request.json()
     except ValueError:
         raise HTTPException(400, "Invalid JSON")
-    result = execute(command, actor)
+    if isinstance(command, dict) and command.get("path") == "webrtc/ping.py":
+        if not isinstance(command.get("params", {}), dict):
+            raise HTTPException(400, {"error": "INVALID_PARAMS"})
+        params = {**SETTINGS["defaults"].get("webrtc/ping.py", {}), **command.get("params", {})}
+        if "webrtc/ping.py" in SETTINGS["permissions"].get("disabled", []):
+            raise HTTPException(403, {"error": "TOOL_DISABLED"})
+        if actor == "bot" and "webrtc/ping.py" in SETTINGS["permissions"].get("bot_denied", []):
+            raise HTTPException(403, {"error": "PERMISSION_DENIED"})
+        tool = TOOLS.get("webrtc/ping.py")
+        if not tool:
+            raise HTTPException(404, {"error": "UNKNOWN_TOOL"})
+        missing = [name for name in tool["required"] if name not in params]
+        if missing:
+            raise HTTPException(400, {"error": "MISSING_PARAMETER", "missing": missing})
+        try:
+            tool["signature"].bind(**params)
+            from functools import partial
+            result_value = await asyncio.to_thread(partial(tool["module"].run, **params))
+            return {"success": True, "result": result_value}
+        except TypeError as exc:
+            raise HTTPException(400, {"error": "INVALID_PARAMETER", "detail": str(exc)})
+    else:
+        result = execute(command, actor)
     if not result["success"]:
         raise HTTPException(400, result)
     return result
