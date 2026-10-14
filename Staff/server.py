@@ -146,6 +146,9 @@ async def dispatch(request: Request):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--list", action="store_true")
+    parser.add_argument("--room")
+    parser.add_argument("--key")
+    parser.add_argument("--signal", default="https://pc-mcp-pcp.gimbeomseognam5.workers.dev")
     args = parser.parse_args()
     load_settings()
     discover_tools()
@@ -153,7 +156,13 @@ if __name__ == "__main__":
     if args.list:
         print("\n".join(TOOLS))
     else:
-        conf = SETTINGS["server"]
-        if conf["api_keys"].get("human", "").startswith("CHANGE_ME") or conf["api_keys"].get("bot", "").startswith("CHANGE_ME"):
-            raise SystemExit("Edit config/server.json: set distinct strong API keys first")
-        uvicorn.run(app, host=conf.get("host", "127.0.0.1"), port=conf.get("port", 8765))
+        import getpass
+        room = args.room or input("WebRTC room: ").strip()
+        key = args.key or getpass.getpass("WebRTC shared key: ")
+        if not (8 <= len(room) <= 80) or len(key) < 16:
+            raise SystemExit("room must be 8-80 characters and key at least 16 characters")
+        print("Connecting through Cloudflare signaling server...")
+        result = TOOLS["webrtc/ping.py"]["module"].run(
+            room=room, key=key, message={"message": "a"}, signal=args.signal
+        )
+        print("Customer JSON response:", json.dumps(result, ensure_ascii=False))
